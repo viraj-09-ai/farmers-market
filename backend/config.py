@@ -1,0 +1,12 @@
+import os
+
+SECRET_KEY = "supersecret"
+
+# Cloudinary
+CLOUD_NAME = "YOUR_CLOUD_NAME"
+API_KEY = "YOUR_API_KEY"
+API_SECRET = "YOUR_API_SECRET"
+
+# Razorpay
+RAZORPAY_KEY = "YOUR_KEY"
+RAZORPAY_SECRET = "YOUR_SECRET"
