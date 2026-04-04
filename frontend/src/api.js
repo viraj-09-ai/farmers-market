@@ -1,4 +1,4 @@
-const API = "http://127.0.0.1:5000";
+const API = "https://farmer-backend-r490.onrender.com";
 
 export const registerUser = async (data) => {
   const res = await fetch(`${API}/register`, {
