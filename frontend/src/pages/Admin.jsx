@@ -145,7 +145,7 @@ export default function Admin() {
 
                 <button
                  onClick={async () => {
-  await fetch(`http://127.0.0.1:5000/delete-product/${p.id}`, {
+  await fetch(`https://farmer-backend-r490.onrender.com/delete-product/${p.id}`, {
     method: "DELETE"
   });
 

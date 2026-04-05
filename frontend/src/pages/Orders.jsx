@@ -6,7 +6,7 @@ export default function Orders() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    fetch("http://127.0.0.1:5000/orders")
+    fetch("https://farmer-backend-r490.onrender.com/orders")
       .then(res => res.json())
       .then(data => setOrders(data));
   }, []);
@@ -30,7 +30,7 @@ export default function Orders() {
               <select
                 value={o.status}
                 onChange={async (e) => {
-                  await fetch(`http://127.0.0.1:5000/update-status/${o.id}`, {
+                  await fetch(`https://farmer-backend-r490.onrender.com/update-status/${o.id}`, {
                     method: "PUT",
                     headers: {
                       "Content-Type": "application/json"

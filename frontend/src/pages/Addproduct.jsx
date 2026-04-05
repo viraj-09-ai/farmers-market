@@ -38,7 +38,7 @@ export default function AddProduct() {
       formData.append("category", form.category);
       formData.append("quality", form.quality);
 
-      const res = await fetch("http://127.0.0.1:5000/add-product", {
+      const res = await fetch("https://farmer-backend-r490.onrender.com/add-product", {
         method: "POST",
         body: formData
       });

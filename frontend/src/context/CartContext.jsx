@@ -13,7 +13,7 @@ export default function CartProvider({ children }) {
 
   const fetchOrders = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:5000/orders");
+      const res = await fetch("https://farmer-backend-r490.onrender.com/orders");
       if (!res.ok) throw new Error("Failed to fetch orders");
       const data = await res.json();
       setOrders(data);
@@ -27,7 +27,7 @@ export default function CartProvider({ children }) {
 
   const fetchProducts = async () => {
     try {
-      const res = await fetch("http://127.0.0.1:5000/products");
+      const res = await fetch("https://farmer-backend-r490.onrender.com/products");
       if (!res.ok) throw new Error("Failed to fetch products");
       const data = await res.json();
       setProducts(data);
@@ -151,7 +151,7 @@ export default function CartProvider({ children }) {
   // 🔥 DELETE PRODUCT
   const deleteProduct = async (id) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5000/delete-product/${id}`, {
+      const res = await fetch(`https://farmer-backend-r490.onrender.com/delete-product/${id}`, {
         method: "DELETE"
       });
       if (!res.ok) throw new Error("Failed to delete product");
@@ -165,7 +165,7 @@ export default function CartProvider({ children }) {
   // 🔥 UPDATE PRODUCT
   const updateProduct = async (updatedProduct) => {
     try {
-      const res = await fetch(`http://127.0.0.1:5000/update-product/${updatedProduct.id}`, {
+      const res = await fetch(`https://farmer-backend-r490.onrender.com/update-product/${updatedProduct.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(updatedProduct)
@@ -200,7 +200,7 @@ export default function CartProvider({ children }) {
     };
 
     try {
-      const res = await fetch("http://127.0.0.1:5000/orders", {
+      const res = await fetch("https://farmer-backend-r490.onrender.com/orders", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
@@ -219,7 +219,7 @@ export default function CartProvider({ children }) {
 
  const updateOrderStatus = async (orderId) => {
   try {
-    const res = await fetch(`http://127.0.0.1:5000/update-order/${orderId}`, {
+    const res = await fetch(`https://farmer-backend-r490.onrender.com/update-order/${orderId}`, {
       method: "POST"
     });
     if (!res.ok) throw new Error("Failed to update order status");

@@ -29,7 +29,7 @@ export default function Wishlist() {
               <div className="flex items-center gap-4">
 
                 <img
-                  src={item.image ? `http://127.0.0.1:5000/uploads/${item.image}` : "https://via.placeholder.com/80"}
+                  src={item.image ? `https://farmer-backend-r490.onrender.com/uploads/${item.image}` : "https://via.placeholder.com/80"}
                   className="w-16 h-16 object-cover rounded"
                 />
 

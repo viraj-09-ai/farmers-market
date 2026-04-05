@@ -176,7 +176,7 @@ export default function Home() {
             <div key={item.id} className="bg-white p-4 rounded shadow hover:shadow-xl transition">
 
               <img 
-                src={item.image ? `http://127.0.0.1:5000/uploads/${item.image}` : "https://via.placeholder.com/300x200?text=No+Image"}
+                src={item.image ? `https://farmer-backend-r490.onrender.com/uploads/${item.image}` : "https://via.placeholder.com/300x200?text=No+Image"}
                 onError={(e) => e.target.src = "https://via.placeholder.com/300x200?text=No+Image"}
                 alt={item.name}
                 className="h-40 w-full object-cover rounded"/>

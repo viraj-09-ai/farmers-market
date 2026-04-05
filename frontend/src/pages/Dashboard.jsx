@@ -44,7 +44,7 @@ export default function Dashboard() {
               <div className="flex items-center gap-4">
 
                 <img
-                  src={product.image ? `http://127.0.0.1:5000/uploads/${product.image}` : "https://via.placeholder.com/64"}
+                  src={product.image ? `https://farmer-backend-r490.onrender.com/uploads/${product.image}` : "https://via.placeholder.com/64"}
                   onError={(e) => e.target.src = "https://via.placeholder.com/64"}
                   alt={product.name}
                   className="w-16 h-16 object-cover rounded"

@@ -36,7 +36,7 @@ export default function Cart() {
       handler: async (response) => {
         // ✅ PAYMENT SUCCESS - NOW SAVE ORDER
         try {
-          const res = await fetch("http://127.0.0.1:5000/place-order", {
+          const res = await fetch("https://farmer-backend-r490.onrender.com/place-order", {
             method: "POST",
             headers: {
               "Content-Type": "application/json"
@@ -99,7 +99,7 @@ export default function Cart() {
                 {/* LEFT */}
                 <div className="flex items-center gap-4">
                   <img
-                    src={item.image ? `http://127.0.0.1:5000/uploads/${item.image}` : "https://via.placeholder.com/80"}
+                    src={item.image ? `https://farmer-backend-r490.onrender.com/uploads/${item.image}` : "https://via.placeholder.com/80"}
                     onError={(e) => e.target.src = "https://via.placeholder.com/80"}
                     alt={item.name}
                     className="w-20 h-20 object-cover rounded-lg"
