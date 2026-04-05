@@ -1,4 +1,4 @@
-const API = "https://farmer-backend-r490.onrender.com";
+const API = "https://farmer-backend-r490.onrender.com/api";
 
 export const registerUser = async (data) => {
   const res = await fetch(`${API}/register`, {
