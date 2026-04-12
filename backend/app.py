@@ -5,6 +5,10 @@ import sqlite3
 import json
 import os
 
+# ✅ THE BULLETPROOF METHOD: Standard internet requests. Will NOT affect your other projects!
+import requests
+import base64
+
 app = Flask(__name__)
 CORS(app)
 
@@ -15,7 +19,7 @@ app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-# 🔥 CREATE TABLES (users + products)
+# 🔥 CREATE TABLES (users + products + orders)
 def init_db():
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
@@ -31,7 +35,7 @@ def init_db():
         )
     """)
 
-    # PRODUCTS TABLE ✅ ADDED
+    # PRODUCTS TABLE
     c.execute("""
         CREATE TABLE IF NOT EXISTS products (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -42,6 +46,7 @@ def init_db():
         )
     """)
 
+    # ORDERS TABLE
     c.execute("""
         CREATE TABLE IF NOT EXISTS orders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -82,7 +87,6 @@ def home():
 @app.route("/register", methods=["POST"])
 def register():
     data = request.json
-
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
 
@@ -93,10 +97,8 @@ def register():
         )
         conn.commit()
         return jsonify({"success": True})
-
     except:
         return jsonify({"success": False, "message": "User already exists"})
-
     finally:
         conn.close()
 
@@ -104,7 +106,6 @@ def register():
 @app.route("/login", methods=["POST"])
 def login():
     data = request.json
-
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
 
@@ -112,7 +113,6 @@ def login():
         "SELECT name, email, role FROM users WHERE email=? AND password=?",
         (data["email"], data["password"])
     )
-
     user = c.fetchone()
     conn.close()
 
@@ -136,9 +136,7 @@ def add_product():
     seller = request.form.get("seller")
     category = request.form.get("category")
     quality = request.form.get("quality")
-
     file = request.files.get("image")
-
     filename = None
 
     if file:
@@ -147,12 +145,10 @@ def add_product():
 
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
-
     c.execute(
         "INSERT INTO products (name, price, image, seller, category, quality) VALUES (?, ?, ?, ?, ?, ?)",
         (name, price, filename, seller, category, quality)
     )
-
     conn.commit()
     conn.close()
 
@@ -163,10 +159,8 @@ def add_product():
 def get_products():
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
-
     c.execute("SELECT id, name, price, image, seller, category, quality FROM products")
     rows = c.fetchall()
-
     conn.close()
 
     products = []
@@ -180,7 +174,6 @@ def get_products():
             "category": r[5],
             "quality": r[6]
         })
-
     return jsonify(products)
 
 # ❌ DELETE PRODUCT
@@ -188,11 +181,9 @@ def get_products():
 def delete_product(id):
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
-
     c.execute("DELETE FROM products WHERE id=?", (id,))
     conn.commit()
     conn.close()
-
     return jsonify({"success": True})
 
 # 🔄 UPDATE PRODUCT
@@ -206,11 +197,9 @@ def update_product(id):
 
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
-
     c.execute("UPDATE products SET name=?, price=?, category=?, quality=? WHERE id=?", (name, price, category, quality, id))
     conn.commit()
     conn.close()
-
     return jsonify({"success": True})
 
 # 🧾 CREATE ORDER
@@ -220,15 +209,12 @@ def create_order():
     data = request.json
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
-
     c.execute(
         "INSERT INTO orders (items, total, user, status) VALUES (?, ?, ?, ?)",
         (str(data["items"]), data["total"], data["user"], "Placed")
     )
-
     conn.commit()
     conn.close()
-
     return jsonify({"success": True})
 
 # 📦 GET ORDERS
@@ -236,7 +222,6 @@ def create_order():
 def get_orders():
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
-
     c.execute("SELECT id, items, total, user, status FROM orders")
     rows = c.fetchall()
     conn.close()
@@ -250,7 +235,6 @@ def get_orders():
             "user": r[3],
             "status": r[4]
         })
-
     return jsonify(orders)
 
 # 🔄 UPDATE ORDER STATUS
@@ -258,7 +242,6 @@ def get_orders():
 def update_order(id):
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
-
     c.execute("SELECT status FROM orders WHERE id=?", (id,))
     row = c.fetchone()
     if not row:
@@ -276,32 +259,83 @@ def update_order(id):
     c.execute("UPDATE orders SET status=? WHERE id=?", (next_status, id))
     conn.commit()
     conn.close()
-
     return jsonify({"success": True, "status": next_status})
 
 @app.route("/update-status/<int:id>", methods=["PUT"])
 def update_status(id):
     data = request.json
-
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
-
     c.execute(
         "UPDATE orders SET status=? WHERE id=?",
         (data["status"], id)
     )
-
     conn.commit()
     conn.close()
-
     return jsonify({"success": True})
+
+# 🌿 NEW AI CROP & SOIL DOCTOR ROUTE (✅ FIXED: USING ACTIVE 2.5-FLASH MODEL)
+@app.route('/api/analyze', methods=['POST'])
+def analyze_farm_image():
+    if 'image' not in request.files:
+        return jsonify({"error": "No image uploaded"}), 400
+
+    file = request.files['image']
+    
+    try:
+        # 1. Read the image and encode it to Base64 (Standard internet format)
+        image_bytes = file.read()
+        base64_image = base64.b64encode(image_bytes).decode('utf-8')
+        mime_type = file.mimetype if file.mimetype else "image/jpeg"
+
+        # 2. Your API Key and the active, free-tier enabled Gemini 2.5 Flash model
+        api_key = "AIzaSyCmsRB-X6tsjdFxhiZbhb2XVCB2Y2imLSE"
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+
+        # 3. The exact prompt
+        prompt = """You are an expert agricultural AI assistant. Look at this image. 
+        If it is a crop/plant: Identify it, assess its health, and give care tips point-wise. 
+        If it is soil: Identify the likely soil type, its characteristics, and suggest suitable crops point-wise.
+        Format your answer clearly with bullet points."""
+
+        # 4. Create the raw payload
+        payload = {
+            "contents": [{
+                "parts": [
+                    {"text": prompt},
+                    {
+                        "inline_data": {
+                            "mime_type": mime_type,
+                            "data": base64_image
+                        }
+                    }
+                ]
+            }]
+        }
+
+        # 5. Send the direct request (Bypasses all Google SDK errors)
+        headers = {"Content-Type": "application/json"}
+        response = requests.post(url, json=payload, headers=headers)
+        data = response.json()
+
+        # 6. Check if successful
+        if response.status_code == 200:
+            analysis_text = data['candidates'][0]['content']['parts'][0]['text']
+            return jsonify({"success": True, "analysis": analysis_text})
+        else:
+            print(f"Google Raw API Error: {data}")
+            error_message = data.get("error", {}).get("message", "Unknown API Error")
+            return jsonify({"error": f"API Error: {error_message}"}), 500
+
+    except Exception as e:
+        print(f"Server Backend Error: {e}")
+        return jsonify({"error": "Failed to connect to Google AI"}), 500
 
 # 🖼️ SERVE IMAGES
 @app.route("/uploads/<filename>")
 def get_image(filename):
     return send_from_directory(app.config["UPLOAD_FOLDER"], filename)
 
-import os
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
     app.run(host="0.0.0.0", port=port)

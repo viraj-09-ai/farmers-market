@@ -1,31 +1,25 @@
 import { motion } from "framer-motion";
 
-export default function ProductCard({ p }) {
+export default function PageWrapper({ children }) {
   return (
     <motion.div
-      whileHover={{ scale: 1.05 }}
-      className="bg-white rounded-xl shadow-md overflow-hidden border hover:shadow-xl transition"
+      // 1. Initial state (before it loads) - slightly lower and transparent
+      initial={{ opacity: 0, y: 20 }}
+      
+      // 2. Animate to state (when it loads) - slides up and fades in
+      animate={{ opacity: 1, y: 0 }}
+      
+      // 3. Exit state (when leaving the page) - slides up and fades out
+      exit={{ opacity: 0, y: -20 }}
+      
+      // 4. The physics of the animation - smooth and premium
+      transition={{ 
+        duration: 0.4, 
+        ease: [0.22, 1, 0.36, 1] // Custom cubic-bezier for an "Apple-like" snap
+      }}
+      className="w-full min-h-screen"
     >
-      <img
-        src={p.image}
-        alt={p.name}
-        className="w-full h-40 object-cover"
-      />
-
-      <div className="p-4">
-        <h2 className="text-sm font-semibold">{p.name}</h2>
-        <p className="text-xs text-gray-500">{p.category}</p>
-
-        <div className="flex justify-between items-center mt-3">
-          <span className="text-green-600 font-bold">
-            ₹{p.price}
-          </span>
-
-          <button className="bg-green-600 text-white px-3 py-1 text-sm rounded hover:bg-green-700">
-            Add
-          </button>
-        </div>
-      </div>
+      {children}
     </motion.div>
   );
 }
