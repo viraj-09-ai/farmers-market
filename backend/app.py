@@ -4,9 +4,10 @@ from werkzeug.utils import secure_filename
 import sqlite3
 import json
 import os
+
+# ✅ THE BULLETPROOF METHOD: Standard internet requests. Will NOT affect your other projects!
 import requests
 import base64
-import io
 
 app = Flask(__name__)
 CORS(app)
@@ -273,7 +274,7 @@ def update_status(id):
     conn.close()
     return jsonify({"success": True})
 
-# 🌿 AI DOCTOR ROUTE (✅ FIXED: CORRECTED MODEL NAME AND API VERSION)
+# 🌿 NEW AI CROP & SOIL DOCTOR ROUTE (✅ RESTORED YOUR EXACT WORKING LOGIC)
 @app.route('/api/analyze', methods=['POST'])
 def analyze_farm_image():
     if 'image' not in request.files:
@@ -282,23 +283,26 @@ def analyze_farm_image():
     file = request.files['image']
     
     try:
-        # ✅ Secure Key from Render Settings
-        api_key = os.getenv("GEMINI_API_KEY")
-        if not api_key:
-             return jsonify({"error": "API Key missing in Render settings"}), 500
-
+        # 1. Read the image and encode it to Base64 (Standard internet format)
         image_bytes = file.read()
         base64_image = base64.b64encode(image_bytes).decode('utf-8')
         mime_type = file.mimetype if file.mimetype else "image/jpeg"
 
-        # ✅ FIX: Changed 2.5-flash to 1.5-flash and v1beta to v1 (Stable)
-        url = f"https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key={api_key}"
+        # 2. Grab the API Key from Render so it doesn't get leaked on GitHub
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            return jsonify({"error": "API Key missing in Render settings"}), 500
 
+        # ✅ This is the exact URL that worked for you before. I put it back!
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+
+        # 3. The exact prompt
         prompt = """You are an expert agricultural AI assistant. Look at this image. 
         If it is a crop/plant: Identify it, assess its health, and give care tips point-wise. 
         If it is soil: Identify the likely soil type, its characteristics, and suggest suitable crops point-wise.
         Format your answer clearly with bullet points."""
 
+        # 4. Create the raw payload
         payload = {
             "contents": [{
                 "parts": [
@@ -313,10 +317,12 @@ def analyze_farm_image():
             }]
         }
 
+        # 5. Send the direct request (Bypasses all Google SDK errors)
         headers = {"Content-Type": "application/json"}
         response = requests.post(url, json=payload, headers=headers)
         data = response.json()
 
+        # 6. Check if successful
         if response.status_code == 200:
             analysis_text = data['candidates'][0]['content']['parts'][0]['text']
             return jsonify({"success": True, "analysis": analysis_text})
