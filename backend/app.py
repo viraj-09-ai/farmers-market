@@ -4,10 +4,9 @@ from werkzeug.utils import secure_filename
 import sqlite3
 import json
 import os
-
-# ✅ THE BULLETPROOF METHOD: Standard internet requests. Will NOT affect your other projects!
 import requests
 import base64
+import io
 
 app = Flask(__name__)
 CORS(app)
@@ -89,7 +88,6 @@ def register():
     data = request.json
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
-
     try:
         c.execute(
             "INSERT INTO users (name, email, password, role) VALUES (?, ?, ?, ?)",
@@ -108,14 +106,12 @@ def login():
     data = request.json
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
-
     c.execute(
         "SELECT name, email, role FROM users WHERE email=? AND password=?",
         (data["email"], data["password"])
     )
     user = c.fetchone()
     conn.close()
-
     if user:
         return jsonify({
             "success": True,
@@ -138,11 +134,9 @@ def add_product():
     quality = request.form.get("quality")
     file = request.files.get("image")
     filename = None
-
     if file:
         filename = secure_filename(file.filename)
         file.save(os.path.join(app.config["UPLOAD_FOLDER"], filename))
-
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
     c.execute(
@@ -151,7 +145,6 @@ def add_product():
     )
     conn.commit()
     conn.close()
-
     return jsonify({"success": True})
 
 # 📦 GET PRODUCTS
@@ -162,7 +155,6 @@ def get_products():
     c.execute("SELECT id, name, price, image, seller, category, quality FROM products")
     rows = c.fetchall()
     conn.close()
-
     products = []
     for r in rows:
         products.append({
@@ -194,7 +186,6 @@ def update_product(id):
     price = data.get("price")
     category = data.get("category")
     quality = data.get("quality")
-
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
     c.execute("UPDATE products SET name=?, price=?, category=?, quality=? WHERE id=?", (name, price, category, quality, id))
@@ -225,7 +216,6 @@ def get_orders():
     c.execute("SELECT id, items, total, user, status FROM orders")
     rows = c.fetchall()
     conn.close()
-
     orders = []
     for r in rows:
         orders.append({
@@ -247,15 +237,8 @@ def update_order(id):
     if not row:
         conn.close()
         return jsonify({"success": False, "message": "Order not found"}), 404
-
     current_status = row[0] or "Placed"
-    next_status = "Delivered"
-
-    if current_status == "Placed":
-        next_status = "Shipped"
-    elif current_status == "Shipped":
-        next_status = "Delivered"
-
+    next_status = "Shipped" if current_status == "Placed" else "Delivered"
     c.execute("UPDATE orders SET status=? WHERE id=?", (next_status, id))
     conn.commit()
     conn.close()
@@ -274,7 +257,7 @@ def update_status(id):
     conn.close()
     return jsonify({"success": True})
 
-# 🌿 NEW AI CROP & SOIL DOCTOR ROUTE (✅ FIXED: USING ACTIVE 2.5-FLASH MODEL)
+# 🌿 AI CROP & SOIL DOCTOR ROUTE (FIXED & SECURE)
 @app.route('/api/analyze', methods=['POST'])
 def analyze_farm_image():
     if 'image' not in request.files:
@@ -283,22 +266,24 @@ def analyze_farm_image():
     file = request.files['image']
     
     try:
-        # 1. Read the image and encode it to Base64 (Standard internet format)
+        # ✅ FIX: Get API key from Render Environment instead of hardcoding
+        api_key = os.getenv("GEMINI_API_KEY")
+        if not api_key:
+            return jsonify({"error": "API Key missing in Render settings"}), 500
+
+        # Read image and encode to Base64
         image_bytes = file.read()
         base64_image = base64.b64encode(image_bytes).decode('utf-8')
         mime_type = file.mimetype if file.mimetype else "image/jpeg"
 
-        # 2. Your API Key and the active, free-tier enabled Gemini 2.5 Flash model
-        api_key = "AIzaSyCmsRB-X6tsjdFxhiZbhb2XVCB2Y2imLSE"
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={api_key}"
+        # ✅ FIX: Use gemini-1.5-flash (Standard model name)
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
 
-        # 3. The exact prompt
         prompt = """You are an expert agricultural AI assistant. Look at this image. 
         If it is a crop/plant: Identify it, assess its health, and give care tips point-wise. 
         If it is soil: Identify the likely soil type, its characteristics, and suggest suitable crops point-wise.
         Format your answer clearly with bullet points."""
 
-        # 4. Create the raw payload
         payload = {
             "contents": [{
                 "parts": [
@@ -313,19 +298,15 @@ def analyze_farm_image():
             }]
         }
 
-        # 5. Send the direct request (Bypasses all Google SDK errors)
         headers = {"Content-Type": "application/json"}
         response = requests.post(url, json=payload, headers=headers)
         data = response.json()
 
-        # 6. Check if successful
         if response.status_code == 200:
             analysis_text = data['candidates'][0]['content']['parts'][0]['text']
             return jsonify({"success": True, "analysis": analysis_text})
         else:
-            print(f"Google Raw API Error: {data}")
-            error_message = data.get("error", {}).get("message", "Unknown API Error")
-            return jsonify({"error": f"API Error: {error_message}"}), 500
+            return jsonify({"error": data.get("error", {}).get("message", "AI API Error")}), 500
 
     except Exception as e:
         print(f"Server Backend Error: {e}")

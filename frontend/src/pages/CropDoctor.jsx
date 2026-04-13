@@ -31,8 +31,11 @@ export default function CropDoctor() {
     formData.append("image", image);
 
     try {
-      // Connecting to your Flask backend on port 10000
-      const response = await fetch("http://127.0.0.1:10000/api/analyze", {
+      // ✅ THE FIX: We use the Vercel variable. 
+      // If it doesn't exist (like on your laptop), it defaults to 127.0.0.1
+      const backendUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:10000";
+      
+      const response = await fetch(`${backendUrl}/api/analyze`, {
         method: "POST",
         body: formData,
       });
@@ -46,7 +49,7 @@ export default function CropDoctor() {
       }
     } catch (err) {
       console.error(err);
-      setError("Failed to connect to the server. Is your Python backend running?");
+      setError("Failed to connect to the server. Check your Vercel/Render connection.");
     } finally {
       setLoading(false);
     }
@@ -160,7 +163,6 @@ export default function CropDoctor() {
               {result && (
                 <div className="flex-1 overflow-y-auto pr-4 custom-scrollbar">
                   <div className="bg-white p-8 rounded-2xl shadow-sm border border-gray-100 text-gray-700 leading-relaxed font-medium">
-                    {/* Render the point-wise markdown cleanly */}
                     {result.split('\n').map((line, index) => {
                       if (line.trim().startsWith('*') || line.trim().startsWith('-')) {
                         return <li key={index} className="ml-6 mb-3 marker:text-green-500">{line.replace(/^[*-\s]+/, '')}</li>;
